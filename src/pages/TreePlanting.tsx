@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trees, Upload, MapPin as MapPinIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const TreePlanting = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     species: "",
@@ -51,12 +53,38 @@ const TreePlanting = () => {
     }, 1500);
   };
 
-  const getRecommendations = () => {
-    setShowRecommendations(true);
-    toast({
-      title: "AI Recommendations Ready",
-      description: "Native species suggestions based on your location.",
-    });
+  const getRecommendations = async () => {
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('tree-recommendations', {
+        body: {
+          location: formData.location || 'Kenya',
+          soilType: '',
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setRecommendations(data.recommendations);
+      setShowRecommendations(true);
+      
+      toast({
+        title: "AI Recommendations Ready",
+        description: "Native species suggestions based on your location.",
+      });
+    } catch (error: any) {
+      console.error('Error getting tree recommendations:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get recommendations. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -234,52 +262,50 @@ const TreePlanting = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button onClick={getRecommendations} className="w-full mb-4">
-                      <MapPinIcon className="mr-2 h-4 w-4" />
-                      Get Recommendations for My Location
+                    <Button onClick={getRecommendations} className="w-full mb-4" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Getting Recommendations...
+                        </>
+                      ) : (
+                        <>
+                          <MapPinIcon className="mr-2 h-4 w-4" />
+                          Get Recommendations for My Location
+                        </>
+                      )}
                     </Button>
 
-                    {showRecommendations && (
+                    {showRecommendations && recommendations.length > 0 && (
                       <div className="space-y-3">
-                        <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">Acacia Species</h4>
-                            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Native</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Highly recommended native species. Drought-resistant and supports local wildlife.
-                          </p>
-                        </div>
+                        {recommendations.map((rec, index) => {
+                          const isNative = rec.category === "Native";
+                          const isCaution = rec.category === "Caution";
+                          const bgClass = isNative 
+                            ? "bg-primary/5 border-primary/20" 
+                            : isCaution 
+                            ? "bg-destructive/5 border-destructive/20" 
+                            : "bg-muted/50";
+                          const badgeClass = isNative 
+                            ? "bg-primary text-primary-foreground" 
+                            : isCaution 
+                            ? "bg-destructive text-destructive-foreground" 
+                            : "bg-accent text-accent-foreground";
 
-                        <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">Baobab Tree</h4>
-                            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Native</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Iconic African tree. Excellent for carbon sequestration and biodiversity.
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-muted/50 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">Mango Tree</h4>
-                            <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded">Suitable</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Provides fruit and shade. Ensure adequate water supply for optimal growth.
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">Eucalyptus</h4>
-                            <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded">Caution</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Not recommended. Can deplete water resources and harm local ecosystems.
-                          </p>
-                        </div>
+                          return (
+                            <div key={index} className={`p-4 border rounded-lg ${bgClass}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold">{rec.name}</h4>
+                                <span className={`text-xs px-2 py-1 rounded ${badgeClass}`}>
+                                  {rec.category}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {rec.description}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>

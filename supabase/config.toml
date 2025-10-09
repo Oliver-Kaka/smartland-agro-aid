@@ -1,0 +1,10 @@
+project_id = "nreqgjyklsttdqwxhkps"
+
+[functions.crop-recommendations]
+verify_jwt = false
+
+[functions.planting-guide]
+verify_jwt = false
+
+[functions.tree-recommendations]
+verify_jwt = false

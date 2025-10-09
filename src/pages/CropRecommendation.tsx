@@ -8,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sprout, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import maizeImage from "@/assets/crop-maize.jpg";
+import beansImage from "@/assets/crop-beans.jpg";
+import sorghumImage from "@/assets/crop-sorghum.jpg";
 
 const CropRecommendation = () => {
   const { toast } = useToast();
@@ -21,41 +25,89 @@ const CropRecommendation = () => {
     previousCrop: "",
   });
 
+  const getCropImage = (cropName: string) => {
+    const name = cropName.toLowerCase();
+    if (name.includes("maize") || name.includes("corn")) return maizeImage;
+    if (name.includes("bean")) return beansImage;
+    if (name.includes("sorghum")) return sorghumImage;
+    return maizeImage;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate AI processing
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.functions.invoke('crop-recommendations', {
+        body: {
+          soilPh: formData.soilPh,
+          location: formData.location,
+          landSize: formData.landSize,
+          previousCrop: formData.previousCrop,
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setResults({
-        recommendedCrops: [
-          { name: "Maize", suitability: 95, season: "Next season (April-July)" },
-          { name: "Beans", suitability: 88, season: "Next season (April-July)" },
-          { name: "Sorghum", suitability: 82, season: "Next season (April-July)" },
-        ],
+        recommendedCrops: data.recommendedCrops,
         selectedCrop: null,
       });
-      setLoading(false);
+
       toast({
         title: "Analysis Complete",
         description: "AI has analyzed your farm conditions successfully.",
       });
-    }, 2000);
+    } catch (error: any) {
+      console.error('Error getting crop recommendations:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get recommendations. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const selectCrop = (cropName: string) => {
-    setResults({
-      ...results,
-      selectedCrop: {
-        name: cropName,
-        spacing: "75cm x 30cm between rows and plants",
-        fertilization: "Apply 100kg/ha NPK at planting, top-dress with 50kg/ha after 4 weeks",
-        pestControl: "Scout weekly for fall armyworm. Use integrated pest management.",
-        irrigation: "Requires 500-800mm rainfall. Irrigate if rainfall is insufficient.",
-        expectedYield: "4-6 tons per hectare under good management",
-        harvestTime: "3-4 months after planting",
-      },
-    });
+  const selectCrop = async (cropName: string) => {
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('planting-guide', {
+        body: {
+          cropName,
+          soilPh: formData.soilPh,
+          location: formData.location,
+          landSize: formData.landSize,
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setResults({
+        ...results,
+        selectedCrop: data,
+      });
+
+      toast({
+        title: "Planting Guide Ready",
+        description: `Detailed guide for ${cropName} has been generated.`,
+      });
+    } catch (error: any) {
+      console.error('Error getting planting guide:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get planting guide. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadGuide = () => {
@@ -177,25 +229,39 @@ const CropRecommendation = () => {
                       {results.recommendedCrops.map((crop: any, index: number) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="relative overflow-hidden rounded-lg border group"
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <div className="font-semibold text-lg">{crop.name}</div>
-                              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                                {crop.suitability}% Match
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                            style={{ backgroundImage: `url(${getCropImage(crop.name)})` }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
+                          
+                          <div className="relative flex items-center justify-between p-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <div className="font-semibold text-lg">{crop.name}</div>
+                                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                  {crop.suitability}% Match
+                                </div>
                               </div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {crop.season}
+                              </div>
+                              {crop.yieldPrediction && (
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  Yield: {crop.yieldPrediction}
+                                </div>
+                              )}
                             </div>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {crop.season}
-                            </div>
+                            <Button
+                              onClick={() => selectCrop(crop.name)}
+                              variant={results.selectedCrop?.name === crop.name ? "default" : "outline"}
+                              disabled={loading}
+                            >
+                              {results.selectedCrop?.name === crop.name ? "Selected" : "Select"}
+                            </Button>
                           </div>
-                          <Button
-                            onClick={() => selectCrop(crop.name)}
-                            variant={results.selectedCrop?.name === crop.name ? "default" : "outline"}
-                          >
-                            {results.selectedCrop?.name === crop.name ? "Selected" : "Select"}
-                          </Button>
                         </div>
                       ))}
                     </div>

@@ -15,12 +15,19 @@ serve(async (req) => {
     const { cropName, soilPh, location, landSize } = await req.json();
     console.log('Generating planting guide for:', cropName);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert agricultural consultant specializing in detailed crop cultivation guidance. Provide comprehensive planting instructions for the specified crop.
+    const prompt = `You are an expert agricultural consultant specializing in detailed crop cultivation guidance. Provide comprehensive planting instructions for the specified crop.
+
+Crop: ${cropName}
+Location: ${location}
+Soil pH: ${soilPh}
+Land Size: ${landSize} hectares
+
+Please provide a detailed planting guide with spacing, fertilization, pest control, irrigation, expected yield, and harvest time.
 
 Return your response in this exact JSON format:
 {
@@ -33,26 +40,17 @@ Return your response in this exact JSON format:
   "harvestTime": "Time to harvest from planting"
 }`;
 
-    const userPrompt = `Crop: ${cropName}
-Location: ${location}
-Soil pH: ${soilPh}
-Land Size: ${landSize} hectares
-
-Please provide a detailed planting guide with spacing, fertilization, pest control, irrigation, expected yield, and harvest time.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
       }),
     });
 
@@ -78,7 +76,7 @@ Please provide a detailed planting guide with spacing, fertilization, pest contr
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data.candidates[0].content.parts[0].text;
     
     console.log('AI Response:', aiResponse);
     

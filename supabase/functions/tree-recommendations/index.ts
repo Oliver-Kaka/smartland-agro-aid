@@ -15,12 +15,17 @@ serve(async (req) => {
     const { location, soilType } = await req.json();
     console.log('Getting tree recommendations for:', { location, soilType });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert forestry and ecology consultant specializing in African tree species. Recommend 4 tree species suitable for the given location, prioritizing native species that support biodiversity and ecosystem health.
+    const prompt = `You are an expert forestry and ecology consultant specializing in African tree species. Recommend 4 tree species suitable for the given location, prioritizing native species that support biodiversity and ecosystem health.
+
+Location: ${location}
+${soilType ? `Soil Type: ${soilType}` : ''}
+
+Please recommend tree species for this location, prioritizing native African species that support local ecosystems.
 
 Return your response in this exact JSON format:
 {
@@ -35,24 +40,17 @@ Return your response in this exact JSON format:
 
 Include at least 2 native species, 1 suitable non-native, and 1 species to avoid with caution note.`;
 
-    const userPrompt = `Location: ${location}
-${soilType ? `Soil Type: ${soilType}` : ''}
-
-Please recommend tree species for this location, prioritizing native African species that support local ecosystems.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
       }),
     });
 
@@ -78,7 +76,7 @@ Please recommend tree species for this location, prioritizing native African spe
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data.candidates[0].content.parts[0].text;
     
     console.log('AI Response:', aiResponse);
     

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const LandReclamation = () => {
   const { toast } = useToast();
@@ -18,46 +19,38 @@ const LandReclamation = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate GIS analysis
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.functions.invoke('land-analysis', {
+        body: {
+          country,
+          region: '',
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setResults({
         country,
-        potentialSites: [
-          {
-            id: 1,
-            name: "Tana River Basin",
-            type: "Dam Construction",
-            area: "2,400 hectares",
-            coordinates: { lat: -1.5, lng: 39.5 },
-            suitability: 92,
-            description: "Ideal location for medium-scale dam. Good geological foundation and water catchment area.",
-          },
-          {
-            id: 2,
-            name: "Yala Swamp Region",
-            type: "Swamp Reclamation",
-            area: "17,500 hectares",
-            coordinates: { lat: 0.1, lng: 34.0 },
-            suitability: 88,
-            description: "Suitable for agricultural reclamation. Requires drainage system installation.",
-          },
-          {
-            id: 3,
-            name: "Ewaso Ngiro Basin",
-            type: "Dam Construction",
-            area: "3,200 hectares",
-            coordinates: { lat: 0.5, lng: 37.5 },
-            suitability: 85,
-            description: "Multi-purpose dam site for irrigation and water supply.",
-          },
-        ],
+        potentialSites: data.potentialSites,
+        recommendations: data.recommendations,
       });
-      setLoading(false);
+
       toast({
         title: "Analysis Complete",
-        description: `Found ${3} potential sites for land reclamation in ${country}.`,
+        description: `AI has analyzed ${data.potentialSites.length} potential sites in ${country}.`,
       });
-    }, 2500);
+    } catch (error: any) {
+      console.error('Error analyzing land:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to analyze region. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -179,34 +172,33 @@ const LandReclamation = () => {
                   ))}
                 </div>
 
-                <Card className="mt-8">
-                  <CardHeader>
-                    <CardTitle>AI Recommendations</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Dam Construction Priority</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Focus on Tana River Basin first due to its high suitability score and strategic 
-                        importance for water supply and irrigation.
-                      </p>
-                    </div>
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Environmental Impact</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Conduct environmental impact assessments before proceeding. All sites require 
-                        careful planning to protect local ecosystems.
-                      </p>
-                    </div>
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Community Engagement</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Engage with local communities early in the planning process. Their knowledge 
-                        of the land is invaluable for successful implementation.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                {results.recommendations && (
+                  <Card className="mt-8">
+                    <CardHeader>
+                      <CardTitle>AI Recommendations</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Priority Site</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {results.recommendations.priority}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Environmental Impact</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {results.recommendations.environmental}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Community Engagement</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {results.recommendations.community}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
           </div>

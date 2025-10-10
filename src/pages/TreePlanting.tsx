@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trees, Upload, MapPin as MapPinIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const TreePlanting = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [userPlantings, setUserPlantings] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalTrees: 0,
+    thisMonth: 0,
+    totalPlantings: 0,
+  });
   
   const [formData, setFormData] = useState({
     species: "",
@@ -24,25 +34,80 @@ const TreePlanting = () => {
     longitude: "",
   });
 
-  const [stats] = useState({
-    totalTrees: 127543,
-    thisMonth: 8234,
-    regions: 24,
-    species: 47,
-  });
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to log tree planting activities.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate, toast]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserPlantings();
+    }
+  }, [user]);
+
+  const fetchUserPlantings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tree_plantings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setUserPlantings(data || []);
+      
+      // Calculate stats
+      const totalTrees = data?.reduce((sum, p) => sum + p.quantity, 0) || 0;
+      const thisMonth = data?.filter(p => {
+        const plantingDate = new Date(p.created_at);
+        const now = new Date();
+        return plantingDate.getMonth() === now.getMonth() && 
+               plantingDate.getFullYear() === now.getFullYear();
+      }).reduce((sum, p) => sum + p.quantity, 0) || 0;
+
+      setStats({
+        totalTrees,
+        thisMonth,
+        totalPlantings: data?.length || 0,
+      });
+    } catch (error: any) {
+      console.error('Error fetching plantings:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
     
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { error } = await supabase
+        .from('tree_plantings')
+        .insert({
+          user_id: user.id,
+          species: formData.species,
+          quantity: parseInt(formData.quantity),
+          location: formData.location,
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Trees Logged Successfully",
         description: `${formData.quantity} ${formData.species} trees recorded at ${formData.location}.`,
       });
       
-      // Reset form
+      // Reset form and refresh data
       setFormData({
         species: "",
         quantity: "",
@@ -50,7 +115,18 @@ const TreePlanting = () => {
         latitude: "",
         longitude: "",
       });
-    }, 1500);
+      
+      await fetchUserPlantings();
+    } catch (error: any) {
+      console.error('Error logging trees:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to log tree planting.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getRecommendations = async () => {
@@ -105,10 +181,10 @@ const TreePlanting = () => {
             </div>
 
             {/* Statistics Dashboard */}
-            <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardDescription>Total Trees Planted</CardDescription>
+                  <CardDescription>Your Total Trees</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-primary">
@@ -130,19 +206,12 @@ const TreePlanting = () => {
               
               <Card>
                 <CardHeader className="pb-3">
-                  <CardDescription>Active Regions</CardDescription>
+                  <CardDescription>Total Plantings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-primary">{stats.regions}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardDescription>Tree Species</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-primary">{stats.species}</div>
+                  <div className="text-3xl font-bold text-primary">
+                    {stats.totalPlantings}
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -313,32 +382,28 @@ const TreePlanting = () => {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
+                    <CardTitle>Your Recent Plantings</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3 pb-3 border-b">
-                        <MapPinIcon className="h-5 w-5 text-primary mt-0.5" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">Karura Forest, Nairobi</p>
-                          <p className="text-xs text-muted-foreground">250 Acacia trees • 2 hours ago</p>
-                        </div>
+                    {userPlantings.length > 0 ? (
+                      <div className="space-y-4">
+                        {userPlantings.slice(0, 5).map((planting, index) => (
+                          <div key={planting.id} className={`flex items-start gap-3 ${index < userPlantings.slice(0, 5).length - 1 ? 'pb-3 border-b' : ''}`}>
+                            <MapPinIcon className="h-5 w-5 text-primary mt-0.5" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{planting.location}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {planting.quantity} {planting.species} trees • {new Date(planting.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex items-start gap-3 pb-3 border-b">
-                        <MapPinIcon className="h-5 w-5 text-primary mt-0.5" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">Aberdare Ranges</p>
-                          <p className="text-xs text-muted-foreground">180 Bamboo trees • 1 day ago</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <MapPinIcon className="h-5 w-5 text-primary mt-0.5" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">Mount Kenya Region</p>
-                          <p className="text-xs text-muted-foreground">320 Mixed species • 3 days ago</p>
-                        </div>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No plantings recorded yet. Start logging your tree planting activities!
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </div>

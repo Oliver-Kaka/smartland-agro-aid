@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sprout, Download, Loader2 } from "lucide-react";
+import { Sprout, Download, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { generatePDFContent } from "@/utils/pdfFormatter";
 import maizeImage from "@/assets/crop-maize.jpg";
 import beansImage from "@/assets/crop-beans.jpg";
 import sorghumImage from "@/assets/crop-sorghum.jpg";
@@ -17,6 +18,7 @@ const CropRecommendation = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [formCollapsed, setFormCollapsed] = useState(false);
   
   const [formData, setFormData] = useState({
     soilPh: "",
@@ -55,6 +57,7 @@ const CropRecommendation = () => {
         recommendedCrops: data.recommendedCrops,
         selectedCrop: null,
       });
+      setFormCollapsed(true);
 
       toast({
         title: "Analysis Complete",
@@ -111,9 +114,22 @@ const CropRecommendation = () => {
   };
 
   const downloadGuide = () => {
+    if (!results?.selectedCrop) return;
+    
+    const content = generatePDFContent(results.selectedCrop);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${results.selectedCrop.name}-planting-guide.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
     toast({
-      title: "Download Started",
-      description: "Your planting guide PDF is being prepared.",
+      title: "Download Complete",
+      description: "Your planting guide has been downloaded.",
     });
   };
 
@@ -136,12 +152,30 @@ const CropRecommendation = () => {
 
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Farm Information</CardTitle>
-                <CardDescription>
-                  Enter your farm details to receive AI-powered crop recommendations
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Farm Information</CardTitle>
+                    <CardDescription>
+                      Enter your farm details to receive AI-powered crop recommendations
+                    </CardDescription>
+                  </div>
+                  {results && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormCollapsed(!formCollapsed)}
+                    >
+                      {formCollapsed ? (
+                        <ChevronDown className="h-5 w-5" />
+                      ) : (
+                        <ChevronUp className="h-5 w-5" />
+                      )}
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
-              <CardContent>
+              {!formCollapsed && (
+                <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -213,6 +247,7 @@ const CropRecommendation = () => {
                   </Button>
                 </form>
               </CardContent>
+              )}
             </Card>
 
             {results && (

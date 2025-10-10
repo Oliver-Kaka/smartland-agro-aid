@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.tree-recommendations]
 verify_jwt = false
+
+[functions.land-analysis]
+verify_jwt = false

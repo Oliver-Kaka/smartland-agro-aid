@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sprout, Download, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sprout, Download, Loader2, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { generatePDFContent } from "@/utils/pdfFormatter";
+import { formatForPDF, generatePDFContent } from "@/utils/pdfFormatter";
 import maizeImage from "@/assets/crop-maize.jpg";
 import beansImage from "@/assets/crop-beans.jpg";
 import sorghumImage from "@/assets/crop-sorghum.jpg";
@@ -222,6 +222,10 @@ const CropRecommendation = () => {
                         value={formData.previousCrop}
                         onChange={(e) => setFormData({ ...formData, previousCrop: e.target.value })}
                       />
+                      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <p>AI crop recommendation requires previous crop information to promote crop rotation, which improves soil quality and reduces pest buildup.</p>
+                      </div>
                     </div>
                   </div>
 
@@ -312,27 +316,27 @@ const CropRecommendation = () => {
                     <CardContent className="space-y-6">
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Spacing</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.spacing}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.spacing)}</p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Fertilization</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.fertilization}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.fertilization)}</p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Pest & Weed Control</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.pestControl}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.pestControl)}</p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Irrigation</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.irrigation}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.irrigation)}</p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Expected Yield</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.expectedYield}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.expectedYield)}</p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2 text-primary">Harvest Time</h3>
-                        <p className="text-muted-foreground">{results.selectedCrop.harvestTime}</p>
+                        <p className="text-muted-foreground">{formatForPDF(results.selectedCrop.harvestTime)}</p>
                       </div>
                     </CardContent>
                   </Card>

@@ -32,16 +32,11 @@ const Index = () => {
               Combat land degradation with data-driven insights, smart crop recommendations, 
               and comprehensive land reclamation tools.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/crop-recommendation">
-                <Button size="lg" className="gap-2">
-                  Get Started <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline">
-                Learn More
+            <Link to="/crop-recommendation">
+              <Button size="lg" className="gap-2">
+                Get Started <ArrowRight className="h-4 w-4" />
               </Button>
-            </div>
+            </Link>
           </div>
         </div>
       </section>

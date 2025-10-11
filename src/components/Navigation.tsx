@@ -15,6 +15,7 @@ const Navigation = () => {
     { path: "/crop-recommendation", label: "Crop AI" },
     { path: "/land-reclamation", label: "Land Analysis" },
     { path: "/tree-planting", label: "Tree Monitoring" },
+    { path: "/suggestions", label: "Suggestions" },
   ];
 
   return (

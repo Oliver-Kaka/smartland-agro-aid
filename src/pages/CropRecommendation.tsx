@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sprout, Download, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,21 +216,12 @@ const CropRecommendation = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="previousCrop">Previous Crop</Label>
-                      <Select
+                      <Input
+                        id="previousCrop"
+                        placeholder="e.g., Maize, Beans, Wheat, Vegetables, etc."
                         value={formData.previousCrop}
-                        onValueChange={(value) => setFormData({ ...formData, previousCrop: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select previous crop" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="maize">Maize</SelectItem>
-                          <SelectItem value="beans">Beans</SelectItem>
-                          <SelectItem value="wheat">Wheat</SelectItem>
-                          <SelectItem value="vegetables">Vegetables</SelectItem>
-                          <SelectItem value="none">None / First Season</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        onChange={(e) => setFormData({ ...formData, previousCrop: e.target.value })}
+                      />
                     </div>
                   </div>
 

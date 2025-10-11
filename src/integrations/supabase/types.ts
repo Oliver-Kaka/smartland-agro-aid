@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      suggestions: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          message: string
+          name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message: string
+          name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tree_plantings: {
         Row: {
           created_at: string | null

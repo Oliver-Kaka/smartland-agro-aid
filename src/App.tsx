@@ -9,6 +9,7 @@ import CropRecommendation from "./pages/CropRecommendation";
 import LandReclamation from "./pages/LandReclamation";
 import TreePlanting from "./pages/TreePlanting";
 import Auth from "./pages/Auth";
+import Suggestions from "./pages/Suggestions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/land-reclamation" element={<LandReclamation />} />
             <Route path="/tree-planting" element={<TreePlanting />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/suggestions" element={<Suggestions />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

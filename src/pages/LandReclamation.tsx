@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Loader2, Info } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import LandReclamationMap from "@/components/LandReclamationMap";
 
 const LandReclamation = () => {
   const { toast } = useToast();
@@ -107,20 +108,8 @@ const LandReclamation = () => {
             {results && (
               <>
                 <div className="mb-8">
-                  <Card className="bg-primary/5 border-primary/20">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-3">
-                        <Info className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium mb-1">Interactive Map Coming Soon</p>
-                          <p className="text-sm text-muted-foreground">
-                            The full GIS map visualization will display identified sites with topographic data, 
-                            water bodies, and detailed geographic analysis.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <h2 className="text-2xl font-bold mb-4">Interactive Map</h2>
+                  <LandReclamationMap sites={results.potentialSites} />
                 </div>
 
                 <div className="mb-6">

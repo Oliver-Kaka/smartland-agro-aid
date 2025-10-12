@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sprout, Download, Loader2, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Sprout, Download, Loader2, ChevronDown, ChevronUp, Info, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatForPDF, generatePDFContent } from "@/utils/pdfFormatter";
@@ -18,6 +18,8 @@ const CropRecommendation = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     soilPh: "",
@@ -109,6 +111,69 @@ const CropRecommendation = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTextToSpeech = async () => {
+    if (!results?.selectedCrop) return;
+    setGeneratingAudio(true);
+    
+    try {
+      // Create text content for TTS
+      const guide = results.selectedCrop;
+      const textContent = `
+        Planting Guide for ${formatForPDF(guide.name)}.
+        
+        Spacing: ${formatForPDF(guide.spacing)}
+        
+        Fertilization: ${formatForPDF(guide.fertilization)}
+        
+        Pest and Weed Control: ${formatForPDF(guide.pestControl)}
+        
+        Irrigation: ${formatForPDF(guide.irrigation)}
+        
+        Expected Yield: ${formatForPDF(guide.expectedYield)}
+        
+        Harvest Time: ${formatForPDF(guide.harvestTime)}
+      `;
+      
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text: textContent }
+      });
+
+      if (error) throw error;
+
+      // Convert base64 to blob and create audio URL
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
+        { type: 'audio/mpeg' }
+      );
+      const url = URL.createObjectURL(audioBlob);
+      
+      // Clean up previous audio URL
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      
+      setAudioUrl(url);
+      
+      // Play the audio
+      const audio = new Audio(url);
+      audio.play();
+
+      toast({
+        title: "Audio Generated",
+        description: "Playing planting guide audio.",
+      });
+    } catch (error: any) {
+      console.error('Error generating audio:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate audio. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingAudio(false);
     }
   };
 
@@ -300,17 +365,38 @@ const CropRecommendation = () => {
                 {results.selectedCrop && (
                   <Card>
                     <CardHeader>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between gap-4">
                         <div>
                           <CardTitle>Planting Guide: {results.selectedCrop.name}</CardTitle>
                           <CardDescription>
                             Detailed instructions for successful cultivation
                           </CardDescription>
                         </div>
-                        <Button onClick={downloadGuide} variant="outline" className="gap-2">
-                          <Download className="h-4 w-4" />
-                          Download PDF
-                        </Button>
+                        <div className="flex gap-2 shrink-0">
+                          <Button onClick={downloadGuide} variant="outline" size="sm" className="gap-2">
+                            <Download className="h-4 w-4" />
+                            Download
+                          </Button>
+                          <Button 
+                            onClick={handleTextToSpeech} 
+                            variant="outline" 
+                            size="sm"
+                            className="gap-2"
+                            disabled={generatingAudio}
+                          >
+                            {generatingAudio ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="h-4 w-4" />
+                                Listen
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-6">

@@ -1,8 +1,37 @@
-# Welcome to your Lovable project
+# AI-Powered Sustainable Agriculture Platform
 
-## Project info
+An intelligent platform designed to promote sustainable farming practices in Africa through AI-driven recommendations, land analysis, and environmental monitoring.
 
-**URL**: https://lovable.dev/projects/4fb82255-dc9d-47f4-b792-d32278f8f9bd
+## Features
+
+### 🌾 AI Crop Recommendation
+- Get personalized crop recommendations based on soil type, climate, and local conditions
+- Supports crop rotation for improved soil quality and pest reduction
+- Detailed planting guides with spacing, fertilization, irrigation, and harvest information
+- Text-to-speech functionality for accessibility
+- Download recommendations as PDF for offline use
+
+### 🗺️ Land Reclamation Analysis
+- Interactive OpenStreetMap integration with topographical data
+- AI-powered identification of potential reclamation sites
+- GIS data analysis for sustainable land development
+- Suitability scoring and environmental impact assessments
+- Community engagement recommendations
+
+### 🌳 Tree Planting Monitoring
+- Track tree planting initiatives across regions
+- Monitor environmental impact and growth
+- AI-powered tree species recommendations
+- Location-based tracking with map integration
+
+### 💡 Suggestions & Feedback
+- Submit ideas for platform improvements
+- Community-driven feature development
+- User engagement and collaboration
+
+## Project URL
+
+**Lovable Project**: https://lovable.dev/projects/4fb82255-dc9d-47f4-b792-d32278f8f9bd
 
 ## How can I edit this code?
 

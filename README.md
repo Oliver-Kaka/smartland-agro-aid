@@ -29,6 +29,10 @@ An intelligent platform designed to promote sustainable farming practices in Afr
 - Community-driven feature development
 - User engagement and collaboration
 
+## Live Deployment
+
+**Live Site**: https://smartland.lovable.app
+
 ## Project URL
 
 **Lovable Project**: https://lovable.dev/projects/4fb82255-dc9d-47f4-b792-d32278f8f9bd

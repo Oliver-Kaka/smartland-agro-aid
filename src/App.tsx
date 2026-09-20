@@ -10,6 +10,9 @@ import LandReclamation from "./pages/LandReclamation";
 import TreePlanting from "./pages/TreePlanting";
 import Auth from "./pages/Auth";
 import Suggestions from "./pages/Suggestions";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import FairUsage from "./pages/FairUsage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
             <Route path="/tree-planting" element={<TreePlanting />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/suggestions" element={<Suggestions />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/fair-usage" element={<FairUsage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

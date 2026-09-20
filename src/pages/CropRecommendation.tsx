@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import FairUsageGate from "@/components/FairUsageGate";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,6 +201,7 @@ const CropRecommendation = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      <FairUsageGate />
       
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4">

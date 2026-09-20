@@ -43,7 +43,11 @@ const FairUsageGate = () => {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="max-w-lg" hideClose>
+      <DialogContent
+        className="max-w-lg [&>button]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2 text-primary mb-1">
             <Scale className="h-5 w-5" />

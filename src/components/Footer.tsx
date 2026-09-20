@@ -1,4 +1,5 @@
 import { Leaf } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -15,6 +16,11 @@ const Footer = () => {
           <p className="text-sm text-muted-foreground">
             © 2025 SmartLand. All rights reserved.
           </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-6 pt-6 border-t border-border text-sm text-muted-foreground">
+          <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link>
+          <Link to="/fair-usage" className="hover:text-primary transition-colors">Fair Usage Policy</Link>
         </div>
       </div>
     </footer>

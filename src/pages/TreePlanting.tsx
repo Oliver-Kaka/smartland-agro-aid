@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import FairUsageGate from "@/components/FairUsageGate";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,6 +167,7 @@ const TreePlanting = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      <FairUsageGate />
       
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4">

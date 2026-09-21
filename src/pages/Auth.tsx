@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -39,6 +41,16 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isLogin && !acceptedPolicies) {
+      toast({
+        title: "Please accept the policies",
+        description: "You must accept the Privacy Policy and Terms & Conditions to create an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -147,7 +159,32 @@ const Auth = () => {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  {!isLogin && (
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="policies"
+                        checked={acceptedPolicies}
+                        onCheckedChange={(v) => setAcceptedPolicies(v === true)}
+                      />
+                      <Label htmlFor="policies" className="text-sm font-normal leading-snug">
+                        I accept the{" "}
+                        <Link to="/privacy" target="_blank" className="text-primary underline">
+                          Privacy Policy
+                        </Link>{" "}
+                        and{" "}
+                        <Link to="/terms" target="_blank" className="text-primary underline">
+                          Terms & Conditions
+                        </Link>
+                        .
+                      </Label>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || (!isLogin && !acceptedPolicies)}
+                  >
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -21,6 +21,7 @@ const Footer = () => {
           <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
           <Link to="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link>
           <Link to="/fair-usage" className="hover:text-primary transition-colors">Fair Usage Policy</Link>
+          <Link to="/cookie-policy" className="hover:text-primary transition-colors">Cookie Policy</Link>
         </div>
       </div>
     </footer>

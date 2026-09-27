@@ -121,8 +121,8 @@ const TreePlanting = () => {
     } catch (error: any) {
       console.error('Error logging trees:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to log tree planting.",
+        title: "Could Not Log Trees",
+        description: await getFriendlyErrorMessage(error, "Failed to log tree planting. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -155,8 +155,8 @@ const TreePlanting = () => {
     } catch (error: any) {
       console.error('Error getting tree recommendations:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to get recommendations. Please try again.",
+        title: "Could Not Get Recommendations",
+        description: await getFriendlyErrorMessage(error, "Failed to get recommendations. Please try again."),
         variant: "destructive",
       });
     } finally {

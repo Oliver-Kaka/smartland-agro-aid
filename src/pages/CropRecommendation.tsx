@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Sprout, Download, Loader2, ChevronDown, ChevronUp, Info, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/aiError";
 import { formatForPDF, generatePDFContent } from "@/utils/pdfFormatter";
 import maizeImage from "@/assets/crop-maize.jpg";
 import beansImage from "@/assets/crop-beans.jpg";

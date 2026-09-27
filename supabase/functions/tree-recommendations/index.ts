@@ -40,7 +40,7 @@ Return your response in this exact JSON format:
 
 Include at least 2 native species, 1 suitable non-native, and 1 species to avoid with caution note.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const callGemini = () => fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,25 +54,34 @@ Include at least 2 native species, 1 suitable non-native, and 1 species to avoid
       }),
     });
 
+    let response = await callGemini();
+    for (let attempt = 1; attempt <= 3 && (response.status === 503 || response.status === 429 || response.status >= 500); attempt++) {
+      await response.text();
+      const delay = 1000 * 2 ** (attempt - 1) + Math.random() * 500;
+      console.log(`Gemini busy (${response.status}), retry ${attempt} in ${Math.round(delay)}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+      response = await callGemini();
+    }
+
+    if (response.status === 503) {
+      return new Response(
+        JSON.stringify({ error: 'The AI service is busy right now. Please try again in a minute.' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI gateway error:', response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), 
+          JSON.stringify({ error: 'Too many requests right now. Please wait a moment and try again.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Payment required. Please add credits to your workspace.' }), 
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      throw new Error(`AI gateway error: ${response.status}`);
+
+      throw new Error('The AI service could not complete the request. Please try again.');
     }
 
     const data = await response.json();

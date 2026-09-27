@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Sprout, Download, Loader2, ChevronDown, ChevronUp, Info, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/aiError";
 import { formatForPDF, generatePDFContent } from "@/utils/pdfFormatter";
 import maizeImage from "@/assets/crop-maize.jpg";
 import beansImage from "@/assets/crop-beans.jpg";
@@ -68,8 +69,8 @@ const CropRecommendation = () => {
     } catch (error: any) {
       console.error('Error getting crop recommendations:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to get recommendations. Please try again.",
+        title: "Could Not Get Recommendations",
+        description: await getFriendlyErrorMessage(error, "Failed to get recommendations. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -106,8 +107,8 @@ const CropRecommendation = () => {
     } catch (error: any) {
       console.error('Error getting planting guide:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to get planting guide. Please try again.",
+        title: "Could Not Generate Guide",
+        description: await getFriendlyErrorMessage(error, "Failed to get planting guide. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -169,8 +170,8 @@ const CropRecommendation = () => {
     } catch (error: any) {
       console.error('Error generating audio:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to generate audio. Please try again.",
+        title: "Could Not Generate Audio",
+        description: await getFriendlyErrorMessage(error, "Failed to generate audio. Please try again."),
         variant: "destructive",
       });
     } finally {

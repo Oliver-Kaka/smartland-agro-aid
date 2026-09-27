@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/aiError";
 import LandReclamationMap from "@/components/LandReclamationMap";
 
 const LandReclamation = () => {
@@ -46,8 +47,8 @@ const LandReclamation = () => {
     } catch (error: any) {
       console.error('Error analyzing land:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to analyze region. Please try again.",
+        title: "Could Not Analyze Region",
+        description: await getFriendlyErrorMessage(error, "Failed to analyze region. Please try again."),
         variant: "destructive",
       });
     } finally {

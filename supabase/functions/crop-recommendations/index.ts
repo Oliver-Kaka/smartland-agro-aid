@@ -42,7 +42,7 @@ Return your response in this exact JSON format:
   ]
 }`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const callGemini = () => fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,6 +55,22 @@ Return your response in this exact JSON format:
         }]
       }),
     });
+
+    let response = await callGemini();
+    for (let attempt = 1; attempt <= 3 && (response.status === 503 || response.status === 429 || response.status >= 500); attempt++) {
+      await response.text();
+      const delay = 1000 * 2 ** (attempt - 1) + Math.random() * 500;
+      console.log(`Gemini busy (${response.status}), retry ${attempt} in ${Math.round(delay)}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+      response = await callGemini();
+    }
+
+    if (response.status === 503) {
+      return new Response(
+        JSON.stringify({ error: 'The AI service is busy right now. Please try again in a minute.' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

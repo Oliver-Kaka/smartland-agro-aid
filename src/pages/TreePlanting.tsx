@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trees, Upload, MapPin as MapPinIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getFriendlyErrorMessage } from "@/lib/aiError";
 import { useAuth } from "@/hooks/useAuth";
 
 const TreePlanting = () => {
